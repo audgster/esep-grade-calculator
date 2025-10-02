@@ -88,3 +88,23 @@ func TestGradeTypeString(t *testing.T) {
 		t.Fatalf("Essay.String wrong: %q", Essay.String())
 	}
 }
+
+func TestPassFail_Pass(t *testing.T) {
+	gc := NewGradeCalculator()
+	gc.AddGrade("a", 70, Assignment)
+	gc.AddGrade("e", 70, Exam)
+	gc.AddGrade("s", 70, Essay)
+	if got := gc.GetFinalGrade(); got != "pass" {
+		t.Fatalf("want Pass, got %s", got)
+	}
+}
+
+func TestPassFail_Fail(t *testing.T) {
+	gc := NewGradeCalculator()
+	gc.AddGrade("a", 10, Assignment)
+	gc.AddGrade("e", 10, Exam)
+	gc.AddGrade("s", 10, Essay)
+	if got := gc.GetFinalGrade(); got != "fail" {
+		t.Fatalf("want Fail, got %s", got)
+	}
+}
