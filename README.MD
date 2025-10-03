@@ -1,6 +1,6 @@
 # ESEP Grade Calculator
 
-This library is a simple utility to calculate your grades.
+This is a simple utility to calculate your grades.
 
 Runtime requirements:
 Golang 1.24+
