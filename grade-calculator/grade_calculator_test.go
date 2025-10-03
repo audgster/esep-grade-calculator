@@ -3,7 +3,7 @@ package esepunittests
 import (
 	"fmt"
 	"strings"
-	"testing"
+	testing "testing"
 )
 
 func TestGetGradeA(t *testing.T) {
@@ -28,9 +28,9 @@ func TestGetGradeB(t *testing.T) {
 
 func TestGetGradeF(t *testing.T) {
 	g := NewGradeCalculator()
-	g.AddGrade("open source assignment", 100, Assignment) // 50%
-	g.AddGrade("exam 1", 0, Exam)                         // 35%
-	g.AddGrade("essay on ai ethics", 0, Essay)            // 15%
+	g.AddGrade("open source assignment", 100, Assignment) // 50
+	g.AddGrade("exam 1", 0, Exam)                         
+	g.AddGrade("essay on ai ethics", 0, Essay)           
 	if got := g.GetFinalGrade(); got != "F" {
 		t.Fatalf("GetFinalGrade() = %q; want %q", got, "F")
 	}
@@ -40,9 +40,6 @@ func TestGradeTypeString(t *testing.T) {
 	if Assignment.String() == "" || Exam.String() == "" || Essay.String() == "" {
 		t.Fatalf("GradeType.String() returned empty for a valid type")
 	}
-}
-
-func TestGradeTypeString_viaFmt(t *testing.T) {
 	s := fmt.Sprintf("%s-%s-%s", Assignment, Exam, Essay)
 	if !strings.Contains(s, "assignment") || !strings.Contains(s, "exam") || !strings.Contains(s, "essay") {
 		t.Fatalf("unexpected String() formatting: %q", s)
@@ -72,15 +69,43 @@ func TestGetFinalGrade_Boundaries(t *testing.T) {
 	}
 }
 
-func TestComputeAverage_EmptyAndNonEmpty(t *testing.T) {
-	if got := computeAverage([]Grade{}); got != 0.0 {
-		t.Fatalf("computeAverage(empty) = %v, want 0", got)
-	}
-	got := computeAverage([]Grade{
-		{Name: "x", Grade: 100, Type: Assignment},
-		{Name: "y", Grade: 80, Type: Assignment},
-	})
-	if got != 90.0 {
-		t.Fatalf("computeAverage(non-empty) = %v, want %v", got, 90.0)
+func TestEmptyEssayContributesZero(t *testing.T) {
+	g := NewGradeCalculator()
+	g.AddGrade("a1", 80, Assignment)
+	g.AddGrade("a2", 80, Assignment)
+	g.AddGrade("e1", 80, Exam)
+	g.AddGrade("e2", 80, Exam)
+	if got := g.GetFinalGrade(); got != "D" {
+		t.Fatalf("GetFinalGrade() = %q; want %q", got, "D")
 	}
 }
+
+func TestNonEmptyAssignmentAverageAffectsResult(t *testing.T) {
+	g := NewGradeCalculator()
+	g.AddGrade("a1", 100, Assignment)
+	g.AddGrade("a2", 80, Assignment)
+	g.AddGrade("e1", 60, Exam)
+	g.AddGrade("s1", 60, Essay)
+	if got := g.GetFinalGrade(); got != "C" {
+		t.Fatalf("GetFinalGrade() = %q; want %q", got, "C")
+	}
+}
+
+func TestPassFailConstructorCoversBranch(t *testing.T) {
+	g := NewGradeCalculatorWithPassFail(70) 
+	g.AddGrade("a1", 70, Assignment)
+	g.AddGrade("e1", 70, Exam)
+	g.AddGrade("s1", 70, Essay)
+	if got := g.GetFinalGrade(); got != "P" {
+		t.Fatalf("got %q; want P", got)
+	}
+
+	g2 := NewGradeCalculatorWithPassFail(70)
+	g2.AddGrade("a1", 60, Assignment)
+	g2.AddGrade("e1", 60, Exam)
+	g2.AddGrade("s1", 60, Essay)
+	if got := g2.GetFinalGrade(); got != "F" {
+		t.Fatalf("got %q; want F", got)
+	}
+}
+
