@@ -1,9 +1,8 @@
 package esepunittests
 
 type GradeCalculator struct {
-	assignments []Grade
-	exams       []Grade
-	essays      []Grade
+	grades   []Grade
+	mapScale func(n float64) string
 }
 
 type GradeType int
@@ -32,69 +31,69 @@ type Grade struct {
 
 func NewGradeCalculator() *GradeCalculator {
 	return &GradeCalculator{
-		assignments: make([]Grade, 0),
-		exams:       make([]Grade, 0),
-		essays:      make([]Grade, 0),
+		grades:   make([]Grade, 0),
+		mapScale: letterScale,
+	}
+}
+
+func NewGradeCalculatorWithPassFail(passCutoff float64) *GradeCalculator {
+	return &GradeCalculator{
+		grades: make([]Grade, 0),
+		mapScale: func(n float64) string {
+			if n >= passCutoff {
+				return "P"
+			}
+			return "F"
+		},
 	}
 }
 
 func (gc *GradeCalculator) GetFinalGrade() string {
-	numericalGrade := gc.calculateNumericalGrade()
+	numerical := gc.calculateNumericalGrade()
+	return gc.mapScale(numerical)
+}
 
-	// A >=90, B >=80, C >=70, D >=60, F <60
+func (gc *GradeCalculator) AddGrade(name string, grade int, gradeType GradeType) {
+	gc.grades = append(gc.grades, Grade{
+		Name:  name,
+		Grade: grade,
+		Type:  gradeType,
+	})
+}
+
+func letterScale(n float64) string {
 	switch {
-	case numericalGrade >= 90:
+	case n >= 90:
 		return "A"
-	case numericalGrade >= 80:
+	case n >= 80:
 		return "B"
-	case numericalGrade >= 70:
+	case n >= 70:
 		return "C"
-	case numericalGrade >= 60:
+	case n >= 60:
 		return "D"
 	default:
 		return "F"
 	}
 }
 
-func (gc *GradeCalculator) AddGrade(name string, grade int, gradeType GradeType) {
-	switch gradeType {
-	case Assignment:
-		gc.assignments = append(gc.assignments, Grade{
-			Name:  name,
-			Grade: grade,
-			Type:  Assignment,
-		})
-	case Exam:
-		gc.exams = append(gc.exams, Grade{
-			Name:  name,
-			Grade: grade,
-			Type:  Exam,
-		})
-	case Essay:
-		gc.essays = append(gc.essays, Grade{
-			Name:  name,
-			Grade: grade,
-			Type:  Essay,
-		})
-	}
-}
-
 func (gc *GradeCalculator) calculateNumericalGrade() float64 {
-	assignmentAvg := computeAverage(gc.assignments)
-	examAvg := computeAverage(gc.exams)
-	essayAvg := computeAverage(gc.essays)
-
+	assignmentAvg := gc.avgByType(Assignment)
+	examAvg := gc.avgByType(Exam)
+	essayAvg := gc.avgByType(Essay)
 	return assignmentAvg*0.50 + examAvg*0.35 + essayAvg*0.15
 }
 
-func computeAverage(grades []Grade) float64 {
-	if len(grades) == 0 {
-		return 0.0 
+func (gc *GradeCalculator) avgByType(t GradeType) float64 {
+	sum, count := 0, 0
+	for _, g := range gc.grades {
+		if g.Type == t {
+			sum += g.Grade
+			count++
+		}
 	}
-	sum := 0
-	for _, g := range grades { // sum  grade value
-		sum += g.Grade
+	if count == 0 {
+		return 0.0
 	}
-	return float64(sum) / float64(len(grades))
+	return float64(sum) / float64(count)
 }
 
